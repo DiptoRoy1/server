@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 8080;
+app.use(express.json());
 app.listen(port, () => { console.log(`Server is running at port ${port}`) });
 const userList = [
     { id: 1, username: "Dipto", displayname: "Dipto" },
@@ -14,12 +15,17 @@ const userList = [
     { id: 9, username: "Safa", displayname: "Safa" }
 ]
 
+// http mathods with exmple
+
+// GET method >>>>>>>>>>>>>>>>>>>>>>>>>
+
 app.get('/', (request, response) => {
     // response.send(`Server is running at prot ${port}`);
     const fileDir = __dirname + "/index.html";
     response.sendFile(fileDir);
 })
 
+// Request query - GET method
 app.get("/api/user", (req, res) => {
     const { filter, value } = req.query;
     if (!filter && !value) { return res.send(userList); }
@@ -32,6 +38,8 @@ app.get("/api/user", (req, res) => {
     }
     return res.send(userList);
 });
+
+// Request params - Get methods
 app.get("/api/user/:id", (req, res) => {
     const reqUserId = parseInt(req.params.id);
     if (isNaN(reqUserId)) { return res.status(201).send("Not a valid user ID") }
@@ -39,3 +47,43 @@ app.get("/api/user/:id", (req, res) => {
     if (reqUser) { return res.send(reqUser) }
     res.send("No use with this ID");
 });
+
+// Post request >>>>>>>>>>>>>>>>>>>>>>>>
+app.post("/api/user", (req, res) => {
+    const { body } = req;
+    const newUser = { id: userList[userList.length - 1].id + 1, ...body }
+    userList.push(newUser);
+    res.send(userList);
+});
+
+// Put request >>>>>>>>>>>>>>>>>>>>>>>>
+app.put("/api/user/:id", (req, res) => {
+    const { body, params: { id } } = req;
+    const reqID = parseInt(id);
+    if (isNaN(reqID)) { return res.status(404).send("Not a valid ID") }
+    const reqIdIndex = userList.findIndex((user) => user.id === reqID)
+    if (reqIdIndex === -1) { return res.status(404).send("No user with this ID") }
+    userList[reqIdIndex] = { id: reqID, ...body };
+    return res.send(userList);
+})
+
+// PATCH request >>>>>>>>>>>>>>>>>>>>>
+app.patch("/api/user/:id", (req, res) => {
+    const { body, params: { id } } = req;
+    const reqID = parseInt(id);
+    if (isNaN(reqID)) { return res.status(404).send("Not a valid ID") }
+    const reqIdIndex = userList.findIndex((user) => user.id === reqID)
+    if (reqIdIndex === -1) { return res.status(404).send("No user with this ID") }
+    userList[reqIdIndex] = { ...userList[reqIdIndex], ...body };
+    return res.send(userList);
+})
+
+// DELET request >>>>>>>>>>>>>>>>>>>>>
+app.delete("/api/user/:id", (req, res) => {
+    const { id } = req.params;
+    const reqID = parseInt(id);
+    if (isNaN(reqID)) { return res.status(404).send("Not a valid ID") }
+    const reqIdIndex = userList.findIndex((user) => user.id === reqID)
+    if (reqIdIndex === -1) { return res.status(404).send("No user with this ID") }
+    return res.status(201).send(userList.splice(reqIdIndex, 1));
+})
